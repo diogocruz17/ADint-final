@@ -1,0 +1,15 @@
+{% extends 'layout.html' %}
+
+{% block content %}
+    <div>
+   <form action = "newGate" method="post">
+    Gate ID: 
+    <textarea id="Gate ID" name="gateID" rows="1" cols="12"></textarea>
+
+    <p>Location:</p>
+    <textarea id="location" name="location" rows="1" cols="12"></textarea>
+    <p> Create Gate</p>
+   <input type="submit">
+</form>
+    </div>
+    {% endblock %}
