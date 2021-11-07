@@ -8,8 +8,8 @@ app = Flask(__name__)
 
 # This information is obtained upon registration of a new GitHub OAuth
 # application here: https://github.com/settings/applications/new
-client_id = ""
-client_secret = ""
+client_id = "851490151334144"
+client_secret = "75qyTg+A8i/UnmzYkD7fo4xKB9rQGymUZcB9HA+c2QmhxMyFyPTp3kuNoJecAxqcrD7SZ9BlHpAIBPFOBmzQaw=="
 authorization_base_url = 'https://fenix.tecnico.ulisboa.pt/oauth/userdialog'
 token_url = 'https://fenix.tecnico.ulisboa.pt/oauth/access_token'
 
@@ -21,7 +21,7 @@ def demo():
     Redirect the user/resource owner to the OAuth provider (i.e. Github)
     using an URL with a few key OAuth parameters.
     """
-    github = OAuth2Session(client_id, redirect_uri="http://localhost:2000/user")
+    github = OAuth2Session(client_id, redirect_uri="http://localhost:5000/callback")
     authorization_url, state = github.authorization_url(authorization_base_url)
     print(authorization_url)
     print(state)
@@ -41,10 +41,10 @@ def callback():
     in the redirect URL. We will use that to obtain an access token.
     """
 
-    print("CALLABACK")
+    print("CALLBACK")
 
     print(request.url)
-    github = OAuth2Session(client_id, state=session['oauth_state'], redirect_uri="http://localhost:2000/user")
+    github = OAuth2Session(client_id, state=session['oauth_state'], redirect_uri="http://localhost:5000/callback")
     print(github.authorized)
     token = github.fetch_token(token_url, client_secret=client_secret,
                                authorization_response=request.url)
