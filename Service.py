@@ -1,5 +1,5 @@
 import os
-from flask import Flask, render_template, request, url_for, redirect,send_from_directory,jsonify, abort
+from flask import Flask, render_template, request, url_for, redirect,send_from_directory,jsonify, abort, session
 import requests
 from sqlalchemy.sql.expression import true
 from sqlalchemy.sql.sqltypes import Float
@@ -7,6 +7,7 @@ from werkzeug.utils import secure_filename
 import random
 import string
 import time
+import json
 
 
 from sqlalchemy import create_engine
@@ -17,6 +18,14 @@ from sqlalchemy.orm import relationship
 import datetime
 from sqlalchemy.orm import sessionmaker
 from os import path
+
+from requests_oauthlib import OAuth2Session
+
+
+client_id = "851490151334144"
+client_secret = "75qyTg+A8i/UnmzYkD7fo4xKB9rQGymUZcB9HA+c2QmhxMyFyPTp3kuNoJecAxqcrD7SZ9BlHpAIBPFOBmzQaw=="
+authorization_base_url = 'https://fenix.tecnico.ulisboa.pt/oauth/userdialog'
+token_url = 'https://fenix.tecnico.ulisboa.pt/oauth/access_token'
 
 
 #SLQ access layer initialization
@@ -46,7 +55,7 @@ Session = sessionmaker(bind=engine)
 session = Session()
 
 def newCode(user, token, code):
-    response = requests.post('http://localhost:9000/newcode', json={'user': user, 'token': token, 'code': code})
+    response = requests.post('http://localhost:9000/newCode', json={'user': user, 'token': token, 'code': code})
     status = response.status_code
     if status == 200:
         return 1
@@ -65,6 +74,17 @@ def checkCodeData(user, code):
             return 0
     except:
         return 0
+
+
+def Authenticate(token):
+    try:
+        github = OAuth2Session(client_id, token = token)
+        info = github.get('https://fenix.tecnico.ulisboa.pt/api/fenix/v1/person').json()
+        ist_id = info['username']
+        user_token = token['access_token']
+        return ist_id, user_token
+    except:
+        return None, None
 
 
 
@@ -126,20 +146,50 @@ def listGate():
     size = len(gate_info[0])
     return render_template("listGates.html", size = size,  gate_info = gate_info)
 
-@app.route("/user/newCode", methods =['POST'])
+
+
+
+@app.route("/user/newCode", methods =['POST', 'GET'])
 def getCode():
     request_json = request.get_json()
-    try:
-        user = request_json['user']
-        token = request_json['token']
-    except:
-        return 0
-    code = generateCode()
-    status = newCode(user, code)
+    token = json.loads(request_json)
+   
+    ist_id, user_token = Authenticate(token)
+    if ist_id == None:
+        abort(403)
+
+    code = generateCode(ist_id, user_token)
+    print(code)
+    status = newCode(ist_id, user_token, code)
+    print(status)
     if status == 1:
-        return jsonify({'code' : code}), 201
+        return jsonify({'code' : code})
     else:
         return "", 301
+
+@app.route("/user/newUser", methods =['POST'])
+def newUserEndpoint():
+    request_json = request.get_json()
+    token = json.loads(request_json)
+   
+    ist_id, user_token = Authenticate(token)
+    if ist_id == None:
+        abort(403)
+    try:
+         response = requests.post('http://localhost:9000/newUser', json = {'ist_id': ist_id, 'user_token': user_token})
+    except requests.exceptions.ConnectionError:
+        print("Could't connect to UserData. Exiting ...")
+        exit(0)
+
+    if response.status_code == 200:
+        return "", 200
+    else:
+        return "", 500
+    
+
+
+
+
 
 @app.route("/gate/gateCheck", methods = ['GET'])
 def checkGate():

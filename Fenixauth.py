@@ -17,7 +17,6 @@ token_url = 'https://fenix.tecnico.ulisboa.pt/oauth/access_token'
 @app.route("/")
 def demo():
     """Step 1: User Authorization.
-
     Redirect the user/resource owner to the OAuth provider (i.e. Github)
     using an URL with a few key OAuth parameters.
     """
@@ -35,7 +34,6 @@ def demo():
 @app.route("/callback", methods=["GET"])
 def callback():
     """ Step 3: Retrieving an access token.
-
     The user has been redirected back from the provider to your registered
     callback URL. With this redirection comes an authorization code included
     in the redirect URL. We will use that to obtain an access token.

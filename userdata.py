@@ -12,6 +12,7 @@ import itertools
 import random
 import string
 import time
+import json
 
 import datetime
 from sqlalchemy.orm import sessionmaker
@@ -87,12 +88,12 @@ session = Session()
 app = Flask(__name__)
      
 
-@app.route("/newUser")
+@app.route("/newUser", methods = ['POST'])
 def newUserEndpoint():
     request_json = request.get_json()
     try:
-        user = request_json['user']
-        token = request_json['token']
+        user = request_json['ist_id']
+        token = request_json['user_token']
     except:
         abort(400)
     try:
@@ -101,7 +102,7 @@ def newUserEndpoint():
         abort(500)
     return "", 200
 
-@app.route("/newCode" , methods = ['GET'])
+@app.route("/newCode" , methods = ['POST'])
 def newCodeEndpoint():
     request_json = request.get_json()
     try:
