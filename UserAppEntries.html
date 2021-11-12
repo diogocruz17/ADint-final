@@ -1,0 +1,38 @@
+<!DOCTYPE html>
+<html>
+  <head>
+    <script src="https://cdn.jsdelivr.net/npm/jquery@3.3.1/dist/jquery.min.js">
+    </script>
+  <link rel="stylesheet" type="text/css" 
+       href="https://cdn.jsdelivr.net/npm/fomantic-ui@2.8.7/dist/semantic.css">
+    <script 
+      src="https://cdn.jsdelivr.net/npm/fomantic-ui@2.8.7/dist/semantic.js">
+    </script>
+    <style>
+      table, th, td {
+         border: 1px solid black;
+      }
+   </style>
+  </head>
+  <body>
+    <table>
+      <tr>
+        <th>User</th>
+        <th>Gate</th>
+        <th>Time</th>
+      </tr>
+      {% for entry in entries %}
+      <tr>
+        <td>{{entry[0]}}</td>
+        <td>{{entry[1]}}</td>
+        <td>{{entry[2]}}</td>
+      </tr>
+      {% endfor %}
+    </table>
+    <form action="/user">
+      <input type="submit" value="Go Back" />
+    </form>
+  </body>
+  <script>
+  </script>
+</html>

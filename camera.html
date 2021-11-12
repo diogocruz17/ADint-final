@@ -3,6 +3,23 @@
   <head>
     <title>Instascan</title>
     <script type="text/javascript" src="https://rawgit.com/schmich/instascan-builds/master/instascan.min.js"></script>
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <style>
+      .dot1 {
+        height: 100px;
+        width: 100px;
+        background-color: rgb(255, 42, 5);
+        border-radius: 50%;
+        display: inline-block;
+      }
+      .dot2 {
+        height: 100px;
+        width: 100px;
+        background-color: rgb(1, 243, 29);
+        border-radius: 50%;
+        display: inline-block;
+      }
+    </style>
   </head>
   <body>
     <script src="https://cdn.jsdelivr.net/npm/jquery@3.3.1/dist/jquery.min.js"></script>
@@ -22,7 +39,30 @@
                 type: "GET",
                 dataType: "json",
                 success: function (data) {
-                  console.log(data.access)
+                  if (data.access == 1){
+                    $('#gate_closed').hide()
+                    $('#close_text').hide()
+                    $('#gate_open').show()
+                    $('#open_text').show()
+                    $('#timer').show()
+                    var six_seconds = 6,
+                    display = $('#time');
+                    startTimer(six_seconds, display);
+                    setTimeout(function() {
+                      $('#gate_closed').show()
+                      $('#close_text').show()
+                      $('#gate_open').hide()
+                      $('#open_text').hide()
+                      $('#timer').hide()
+                    }, 7500);
+
+                  }
+                  else{
+                    $('#wrong_code').show()
+                    setTimeout(function() {
+                      $('#wrong_code').hide()
+                    }, 3000);
+                  }
                 }
             });
         //resultado- abrir/ não abrir
@@ -36,6 +76,60 @@
       }).catch(function (e) {
         console.error(e);
       });
+
+      function startTimer(duration, display) {
+        var timer = duration, minutes, seconds, count = 0;
+        var id = setInterval(function () {
+
+            seconds = parseInt(timer % 60, 10);
+
+            seconds = seconds < 10 ? "0" + seconds : seconds;
+
+            display.text(seconds);
+
+            if (--timer < 0) {
+                clearInterval(id);
+            }
+  
+        }, 1000);
+        return;
+       
+      }
+      /*
+      jQuery(function ($) {
+        var six_seconds = 6,
+        display = $('#time');
+        startTimer(six_seconds, display);
+      });*/
+
+
+
+
+      $(document).ready(function(){
+        $('#gate_closed').show()
+        $('#close_text').show()
+        $('#gate_open').hide()
+        $('#open_text').hide()
+        $('#wrong_code').hide()
+        $('#timer').hide()
+      });
     </script>
+    <div style="text-align:center">
+      <h1>Gate Status</h1>
+      <span class="dot1" id = 'gate_closed'></span>
+      <span class="dot2" id = 'gate_open'></span>
+    </div>
+    <div id='close_text' style="text-align:center">
+      <h3>Gate is Closed</h3>
+    </div>
+    <div id='open_text' style="text-align:center">
+      <h3>Gate is Open</h3>
+    </div>
+    <div style="text-align:center" id = 'timer'>
+      <h4>Gate closes in <span id="time"></span> seconds!</h4>
+    </div>
+    <div style="text-align:center" id = 'wrong_code'>
+      <h4>Code expired or incorrect!</h4>
+    </div>
   </body>
 </html>

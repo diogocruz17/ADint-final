@@ -58,28 +58,31 @@ def newUser(user, token):
         return
 
 def newCode(user, token, code):
+    time_created = time.time()
     user_q = session.query(UserData).filter(UserData.user == user).first()
-    print(code)
     if user_q == None:
         return 0
     if user_q.token == token:
         user_q.code = code
+        user_q.time_created = time_created
         session.commit()
         return 1
 
 def checkCode(code):
-    print(code)
     user_q = session.query(UserData).filter(UserData.code == code).first()
-    print(len(user_q))
+    #user_q = session.query(UserData).filter(UserData.user == user).first()
+    #print(user_q.code)
+    #if( code == user_q.code):
+     #   print("igual")
     if user_q == None:
-        return 0
+        return 0, ""
     else:
         time_created = user_q.time_created
         time_check = time.time()
         if (time_check-time_created)<60 :
-            return 2
+            return 2, str(user_q.user)
         else:
-            return 1
+            return 1, ""
 
 
 
@@ -130,12 +133,11 @@ def checkCodeEndpoint():
         code = request_json['code']
     except:
         abort(400)
-    code_check = checkCode(code)
-    print(code_check)
+    code_check, user_id = checkCode(code)
     if(code_check == 0 or code_check == 1):
         abort(400)
     if(code_check == 2):
-        return "", 200
+        return jsonify({'user_id': user_id}), 200
     
 
 

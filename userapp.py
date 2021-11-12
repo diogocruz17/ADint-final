@@ -4,6 +4,7 @@ import requests
 import os
 from requests_oauthlib import OAuth2Session
 from werkzeug.wrappers import response
+import time
 
 
 app = Flask(__name__)
@@ -44,7 +45,7 @@ def callback():
     in the redirect URL. We will use that to obtain an access token.
     """
 
-    print("CALLBACK")
+    #print("CALLBACK")
 
     #print(request.url)
     github = OAuth2Session(client_id, state=session['oauth_state'], redirect_uri="http://localhost:2000/callback")
@@ -70,21 +71,21 @@ def profile():
     global global_token
     global_token = token
     ist_id = info['username']
-    print("global_token",global_token)
+    #print("global_token",global_token)
 
 
     
     json_data = json.dumps(token)
-    print(json_data)
+    
     try:
          response = requests.post('http://localhost:7000/user/newUser', json = json_data)
     except requests.exceptions.ConnectionError:
         print("Could't connect to Service. Exiting ...")
-        exit(0)
+        return(render_template("ServerOffline.html"))
     
     if response.status_code == 500:
         print("Internal Error in Server. Exiting ...")
-        exit(0)
+        return(render_template("ServerError.html"))
         
     return(render_template('UserAppOptions.html'))
 
@@ -92,17 +93,42 @@ def profile():
 
 @app.route("/user")
 def userOptions():
-    render_template("UserAppOptions.html")
+    return render_template("UserAppOptions.html")
 
 @app.route("/user/code")
 def userCodeEndpoint():
     json_data = json.dumps(global_token)
-    response = requests.get('http://localhost:7000/user/newCode', json = json_data)
+    try:
+        response = requests.get('http://localhost:7000/user/newCode', json = json_data)
+    except requests.exceptions.ConnectionError:
+        print("Could't connect to Service. Exiting ...")
+        return render_template("ServerOffline.html")
+    if response.status_code != 200:
+        return render_template("ServerError.html")
     response_json = response.json()
     code = response_json['code']
     return render_template('UserAppCode.html', code = code)
 
+@app.route("/user/entries")
+def userEntriesEndpoint():
+    json_data = json.dumps(global_token)
+    try:
+        response = requests.get('http://localhost:7000/user/getEntries', json = json_data)
+    except requests.exceptions.ConnectionError:
+        print("Could't connect to Service. Exiting ...")
+        return render_template("ServerOffline.html")
+    if response.status_code != 200:
+        return render_template("ServerError.html")
+    
+    try:
+        response_Json = response.json()
+    except:
+        print("Wrong data format")
+        return render_template("ServerError.html")
+    for a in response_Json:
+        a[2] = time.strftime('%Y-%m-%d %H:%M:%S', time.localtime(a[2]))
 
+    return render_template("UserAppEntries.html", entries = response_Json)
 
 
 
