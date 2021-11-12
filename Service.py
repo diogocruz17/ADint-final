@@ -62,17 +62,12 @@ def newCode(user, token, code):
     else:
         return 0
     
-def checkCodeData(user, code):
-    try:
-        user_q = session.query(UserCode).filter(UserCode.user == user).first()
-        code_database = user_q.code
-        time_created = user_q.time_created
-        time_check = time.time()
-        if code == code_database and (time_check-time_created)<60 :
-            return 1
-        else:
-            return 0
-    except:
+def checkCodeData(code):
+    response = requests.get('http://localhost:9000/codeCheck', json={'code': code})
+    status = response.status_code
+    if status == 200:
+        return 1
+    else:
         return 0
 
 
@@ -149,7 +144,7 @@ def listGate():
 
 
 
-@app.route("/user/newCode", methods =['POST', 'GET'])
+@app.route("/user/newCode", methods =['GET'])
 def getCode():
     request_json = request.get_json()
     token = json.loads(request_json)
@@ -218,20 +213,21 @@ def checkGate():
 @app.route("/gate/codeCheck", methods = ['POST', 'GET'])
 def checkCode():
     request_json = request.get_json()
-    print(request_json)
-    user = 'default'
     try:
-        user_code = request_json['code']
-        gate_id = request_json['gate_id']
+        code = request_json['code']
+        print(code)
     except:
         abort(400)
-    auth = checkCodeData(user, user_code)
+    
+    auth = checkCodeData(code)
     if auth == 1:
+        """"
         try:
-            response = requests.get('http://localhost:8000/%s/open' % gate_id)
+            response = requests.post('http://localhost:8000/%s/open' % gate_id)
         except requests.exceptions.ConnectionError:
             abort(503)
-        return '', 202
+        """
+        return '', 200
     else:
         abort(401)
 

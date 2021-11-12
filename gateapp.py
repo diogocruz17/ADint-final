@@ -1,6 +1,10 @@
 import requests
 import sys
 import time
+from flask import Flask, render_template, request, url_for, redirect,send_from_directory,jsonify, abort, session
+from flask.templating import render_template
+from werkzeug.wrappers import response
+import requests
 
 try:
     gate_id = sys.argv[1]
@@ -31,6 +35,7 @@ if status != 1:
     print("Exiting...")
     exit(0)
 
+""""
 while (1):
     print("Type the user code: ")
     user_code=input()
@@ -52,3 +57,22 @@ while (1):
         print("Couldn't reach server.")
     if response.status_code == 401:
         print("!!! Code Not Valid !!!")
+"""
+
+app = Flask(__name__)
+
+@app.route("/")
+def index():
+    return render_template("camera.html")
+
+@app.route("/codeCheck/<code>")
+def codeCheck(code):
+    response = requests.get('http://localhost:7000/gate/codeCheck', json = {'code': code})
+    if response.status_code == 200:
+        return jsonify({'access': 1})
+    else:
+        return jsonify({'access': 0})
+    
+
+if __name__ == "__main__":
+    app.run(port=2500, debug=True)

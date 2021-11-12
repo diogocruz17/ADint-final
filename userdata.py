@@ -37,7 +37,7 @@ class UserData(Base):
     time_created = Column(Float)
 
     def __repr__(self):
-        return "<GateData(user = %s token = %s code = %s time_created = %f)>" % (
+        return "<UserData(user = %s token = %s code = %s time_created = %f)>" % (
                         self.user, self.token, self.code, self.time_created)
 
 
@@ -57,22 +57,26 @@ def newUser(user, token):
         session.commit()
         return
 
-def newCode(user,token, code):
+def newCode(user, token, code):
     user_q = session.query(UserData).filter(UserData.user == user).first()
+    print(code)
     if user_q == None:
         return 0
     if user_q.token == token:
         user_q.code = code
+        session.commit()
         return 1
 
-def checkCode(user, token, code):
-    user_q = session.query(UserData).filter(UserData.user == user).first()
+def checkCode(code):
+    print(code)
+    user_q = session.query(UserData).filter(UserData.code == code).first()
+    print(len(user_q))
     if user_q == None:
         return 0
-    if user_q.token == token:
+    else:
         time_created = user_q.time_created
         time_check = time.time()
-        if code == user_q.code and (time_check-time_created)<60 :
+        if (time_check-time_created)<60 :
             return 2
         else:
             return 1
@@ -123,18 +127,16 @@ def newCodeEndpoint():
 def checkCodeEndpoint():
     request_json = request.get_json()
     try:
-        user = request_json['user']
-        token = request_json['token']
         code = request_json['code']
     except:
         abort(400)
-    code_check = checkCode(user, token, code)
-    
-    if(code_check == 0 | code_check == 1):
-        return "", 401
+    code_check = checkCode(code)
+    print(code_check)
+    if(code_check == 0 or code_check == 1):
+        abort(400)
     if(code_check == 2):
         return "", 200
-
+    
 
 
 if __name__ == "__main__":

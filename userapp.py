@@ -97,13 +97,10 @@ def userOptions():
 @app.route("/user/code")
 def userCodeEndpoint():
     json_data = json.dumps(global_token)
-    print("token:",global_token)
     response = requests.get('http://localhost:7000/user/newCode', json = json_data)
-    a = response.json()
-    print(a)
-    #print(a['code'])
-    
-    return 1
+    response_json = response.json()
+    code = response_json['code']
+    return render_template('UserAppCode.html', code = code)
 
 
 
