@@ -3,35 +3,30 @@
   <head>
     <script src="https://cdn.jsdelivr.net/npm/jquery@3.3.1/dist/jquery.min.js">
     </script>
+    <script src="https://cdn.rawgit.com/davidshimjs/qrcodejs/gh-pages/qrcode.min.js"></script>
   <link rel="stylesheet" type="text/css" 
        href="https://cdn.jsdelivr.net/npm/fomantic-ui@2.8.7/dist/semantic.css">
     <script 
       src="https://cdn.jsdelivr.net/npm/fomantic-ui@2.8.7/dist/semantic.js">
     </script>
-    <script
-     src="https://cdn.rawgit.com/davidshimjs/qrcodejs/gh-pages/qrcode.min.js">
-    </script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/qrious/4.0.2/qrious.min.js"></script>
   </head>
   <body>
     <h3>Your Code is:</h3>
-    <div id="qrcode"></div>
+    <canvas id="qrcode"></canvas>
     <script type="text/javascript">
     </script>
   </form>
+  <h3>Get a new Code</h3>
+    <form action="/user/code">
+        <input type="submit" value="Get Code" />
+    </form>
   </body>
-  <script>
+  <script type="text/javascript">
     $(document).ready(function(){
-      $.ajax({
-                url: 'http:/localhost:7000/user/newCode/',
-                type: "GET",
-                dataType: "json",
-                contentType: 'application/json',
-                data: JSON.stringify(requestData),          
-                success: function (data) {
-                  new QRCode(document.getElementById("qrcode"), data);
-                }
-            });
-
+        var qr_code = '{{code}}'
+        new QRious({element: document.getElementById("qrcode"), size: 300, value: qr_code})
+        
     });
   </script>
 </html>
