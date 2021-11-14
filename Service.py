@@ -32,6 +32,26 @@ token_url = 'https://fenix.tecnico.ulisboa.pt/oauth/access_token'
 admin_id = ["ist193049"]
 
 
+DATABASE_FILE = "gateaccess.sqlite"
+db_exists = False
+if path.exists(DATABASE_FILE):
+    db_exists = True
+    print("\t database already exists")
+
+engine = create_engine('sqlite:///%s'%(DATABASE_FILE), echo=False)
+
+Base = declarative_base()
+
+class GateAccess(Base):
+    __tablename__= 'GateAcess'
+    index = Column(Integer, primary_key=True)
+    gate_id = Column(Integer)
+    access = Column(Integer)
+    time_opened = Column(Float)
+
+    def __repr__(self):
+        return "<GateAccess(index = %d gate_id = %d access = %d time_opened = %f)>" % (
+            self.index, self.gate_id, self.access, self.time_opened)
 
 
 def newCode(user, token, code):
@@ -68,6 +88,31 @@ def Authenticate(token):
     except:
         return None, None
 
+
+def AddGate(gate_id, auth):
+    time_opened = time.time()
+    rows = session.query(GateAccess).count()
+    
+    access = GateAccess(index = rows+1, gate_id = gate_id, access = auth, 
+                        time_opened = time_opened)
+    try:
+        session.add(access)
+        session.commit()
+        return 1
+    except:
+        return 0
+    
+
+def GetAccesses(gate_id):
+    accesses = []
+    
+    gate = session.query(GateAccess).filter(GateAccess.gate_id==gate_id).all()
+    
+    for line in gate:
+        # a = [line.user_id, line.gate_id, line.time_opened]
+        accesses.append(line)
+    
+    return accesses
 
 
 app = Flask(__name__)
@@ -160,6 +205,7 @@ def newGate():
     if(status == 400):
         return "There was a problem with the json formating"
 
+
 @app.route("/admin/gateList", methods = ['GET'])
 def listGate():
     try:
@@ -178,6 +224,7 @@ def listGate():
         return render_template("ServerError.html")
     size = len(gate_info[0])
     return render_template("listGates.html", size = size,  gate_info = gate_info)
+
 
 
 
@@ -237,8 +284,6 @@ def getEntriesEndpoint():
     
 
 
-
-
 @app.route("/gate/gateCheck", methods = ['GET'])
 def checkGate():
     request_json = request.get_json()
@@ -273,6 +318,7 @@ def checkCode():
     except:
         abort(400)
     auth, user_id = checkCodeData(code)
+    success = AddGate(gate_id, auth)
     if auth == 1:
         requests.post('http://localhost:8500/newEntry', json = {'ist_id': user_id, 'gate_id': gate_id})
         """"
@@ -288,6 +334,8 @@ def checkCode():
 
 if __name__ == "__main__":
     os.environ['OAUTHLIB_INSECURE_TRANSPORT'] = "1"
+    
+    
 
     app.secret_key = os.urandom(24)
     app.run(port=7000, debug=True)
