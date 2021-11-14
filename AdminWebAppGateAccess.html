@@ -1,0 +1,14 @@
+{% extends 'layout.html' %}
+
+{% block content %}
+<h3> List of Gate Accesses</h3>
+
+    {% for i in range(size) %}
+        <li>
+            Gate ID: {{gate_access[0][i]}} &nbsp
+            Authorized: {{gate_access[1][i]}} &nbsp
+            Time: {{gate_access[2][i]}} &nbsp
+        </li>
+    {% endfor %}
+        
+{% endblock %}

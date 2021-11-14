@@ -94,10 +94,13 @@ def Authenticate(token):
         return None, None
 
 
-def AddGate(gate_id, auth):
+def AddAccess(gate_id, auth):
     time_opened = time.time()
-    rows = session_bd.query(GateAccess).count()
-    
+    try:
+        rows = session_bd.query(GateAccess).count()
+    except:
+        rows=0
+
     access = GateAccess(index = rows+1, gate_id = gate_id, access = auth, 
                         time_opened = time_opened)
     try:
@@ -113,12 +116,17 @@ def GetAccesses(gate_id):
     
     gate = session_bd.query(GateAccess).filter(GateAccess.gate_id==gate_id).all()
     
-    for line in gate:
-        # a = [line.user_id, line.gate_id, line.time_opened]
-        accesses.append(line)
-    
+    if gate == None:
+        return None
+    else:
+        for line in gate:
+            accesses.append((line.gate_id, line.access, line.time_opened))
     return accesses
 
+Base.metadata.create_all(engine) #Create tables for the data models
+
+Session = sessionmaker(bind=engine)
+session_bd = Session()
 
 app = Flask(__name__)
 
@@ -230,7 +238,11 @@ def listGate():
     size = len(gate_info[0])
     return render_template("listGates.html", size = size,  gate_info = gate_info)
 
-
+@app.route("/admin/gateAccess/<gate_id>", methods = ['GET'])
+def gateAccess(gate_id):
+    gate_access = GetAccesses(gate_id)
+    size = len(gate_access)
+    return render_template("AdminWebAppGateAccess.html", size = size, gate_access = gate_access)
 
 
 
@@ -323,9 +335,12 @@ def checkCode():
     except:
         abort(400)
     auth, user_id = checkCodeData(code)
-    success = AddGate(gate_id, auth)
+    success = AddAccess(gate_id, auth)
     if auth == 1:
-        requests.post('http://localhost:8500/newEntry', json = {'ist_id': user_id, 'gate_id': gate_id})
+        try:
+            requests.post('http://localhost:8500/newEntry', json = {'ist_id': user_id, 'gate_id': gate_id})
+        except:
+            abort(503)
         """"
         try:
             response = requests.post('http://localhost:8000/%s/open' % gate_id)
