@@ -42,6 +42,11 @@ engine = create_engine('sqlite:///%s'%(DATABASE_FILE), echo=False)
 
 Base = declarative_base()
 
+Base.metadata.create_all(engine) #Create tables for the data models
+
+Session = sessionmaker(bind=engine)
+session_bd = Session()
+
 class GateAccess(Base):
     __tablename__= 'GateAcess'
     index = Column(Integer, primary_key=True)
@@ -91,13 +96,13 @@ def Authenticate(token):
 
 def AddGate(gate_id, auth):
     time_opened = time.time()
-    rows = session.query(GateAccess).count()
+    rows = session_bd.query(GateAccess).count()
     
     access = GateAccess(index = rows+1, gate_id = gate_id, access = auth, 
                         time_opened = time_opened)
     try:
-        session.add(access)
-        session.commit()
+        session_bd.add(access)
+        session_bd.commit()
         return 1
     except:
         return 0
@@ -106,7 +111,7 @@ def AddGate(gate_id, auth):
 def GetAccesses(gate_id):
     accesses = []
     
-    gate = session.query(GateAccess).filter(GateAccess.gate_id==gate_id).all()
+    gate = session_bd.query(GateAccess).filter(GateAccess.gate_id==gate_id).all()
     
     for line in gate:
         # a = [line.user_id, line.gate_id, line.time_opened]
