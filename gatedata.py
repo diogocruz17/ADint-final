@@ -159,7 +159,7 @@ def checkGateEndpoint():
         message = ""
     return jsonify({'status' : status, 'message' : message})
 
-@app.route("/<gate>/open")
+@app.route("/<gate>/open", methods =['POST'])
 def openGateEndpoint(gate):
     gate_id = gate
     success = openGate(gate_id)

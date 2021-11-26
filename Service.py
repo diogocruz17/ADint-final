@@ -38,17 +38,12 @@ if path.exists(DATABASE_FILE):
     db_exists = True
     print("\t database already exists")
 
-engine = create_engine('sqlite:///%s'%(DATABASE_FILE), echo=False)
+engine = create_engine('sqlite:///%s?check_same_thread=False'%(DATABASE_FILE), echo=False)
 
 Base = declarative_base()
 
-Base.metadata.create_all(engine) #Create tables for the data models
-
-Session = sessionmaker(bind=engine)
-session_bd = Session()
-
 class GateAccess(Base):
-    __tablename__= 'GateAcess'
+    __tablename__= 'GateAccess'
     index = Column(Integer, primary_key=True)
     gate_id = Column(Integer)
     access = Column(Integer)
@@ -76,8 +71,8 @@ def checkCodeData(code):
     except:
         return 0, ""
     status = response.status_code
-    response_json = response.json()
     if status == 200:
+        response_json = response.json()
         return 1, response_json['user_id']
     else:
         return 0, ""
@@ -100,7 +95,6 @@ def AddAccess(gate_id, auth):
         rows = session_bd.query(GateAccess).count()
     except:
         rows=0
-
     access = GateAccess(index = rows+1, gate_id = gate_id, access = auth, 
                         time_opened = time_opened)
     try:
@@ -112,15 +106,19 @@ def AddAccess(gate_id, auth):
     
 
 def GetAccesses(gate_id):
-    accesses = []
+    accesses = list()
+    print(gate_id)
+    gate_count = session_bd.query(GateAccess).filter(GateAccess.gate_id==gate_id).count()
     
-    gate = session_bd.query(GateAccess).filter(GateAccess.gate_id==gate_id).all()
-    
-    if gate == None:
+    if(gate_count == 0):
         return None
+
     else:
+        gate = session_bd.query(GateAccess).filter(GateAccess.gate_id==gate_id).all()
         for line in gate:
-            accesses.append((line.gate_id, line.access, line.time_opened))
+            new_time = time.strftime('%Y-%m-%d %H:%M:%S', time.localtime(line.time_opened))
+            accesses.append((line.gate_id, line.access, new_time))
+
     return accesses
 
 Base.metadata.create_all(engine) #Create tables for the data models
@@ -238,11 +236,18 @@ def listGate():
     size = len(gate_info[0])
     return render_template("listGates.html", size = size,  gate_info = gate_info)
 
-@app.route("/admin/gateAccess/<gate_id>", methods = ['GET'])
+@app.route("/admin/gateAccess/<gate_id>")
 def gateAccess(gate_id):
     gate_access = GetAccesses(gate_id)
-    size = len(gate_access)
+    if gate_access == None:
+        size = 0
+    else:
+        size = len(gate_access)
+    print(gate_access)
     return render_template("AdminWebAppGateAccess.html", size = size, gate_access = gate_access)
+
+
+
 
 
 
@@ -341,12 +346,10 @@ def checkCode():
             requests.post('http://localhost:8500/newEntry', json = {'ist_id': user_id, 'gate_id': gate_id})
         except:
             abort(503)
-        """"
         try:
             response = requests.post('http://localhost:8000/%s/open' % gate_id)
         except requests.exceptions.ConnectionError:
             abort(503)
-        """
         return '', 200
     else:
         abort(401)
